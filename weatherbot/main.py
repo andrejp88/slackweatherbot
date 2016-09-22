@@ -1,9 +1,10 @@
 import slackclient as sc
 import time
-from enum import Enum
 from weather import *  # PyCharm highlights this as wrong, but it's fine. The methods defined here also work.
+from common import *
 import xml.etree.ElementTree as et
 import os.path
+import datetime
 
 
 def get_config():
@@ -43,6 +44,9 @@ months_short   = {"jan" : "january", "feb" : "february", "mar" : "march", "apr" 
                   "may" : "may", "jun" : "june", "jul" : "july", "aug" : "august",
                   "sep" : "september", "oct" : "october", "nov" : "november", "dec" : "december"}
 special_dates  = ["now", "tomorrow", "tonight", "today"]
+months_ord     = {"jan" : 1, "feb" : 2, "mar" : 3, "apr" : 4,
+                  "may" : 5, "jun" : 6, "jul" : 7, "aug" : 8,
+                  "sep" : 9, "oct" : 10, "nov" : 11, "dec" : 12}
 dates          = [str(i) for i in range(1, 32)]
 days_per_month = {"jan" : 31, "feb" : 29, "mar" : 31, "apr" : 30,
                   "may" : 31, "jun" : 30, "jul" : 31, "aug" : 31,
@@ -80,6 +84,11 @@ Both are used through Python through the pyowm and slackclient PyPI packages, re
 This project is licenced under the MIT licence, as are both those packages. Contact Mia Kramer for more information."""
 
 
+def check_dates(date):
+    if date in special_dates:
+        return date
+
+
 def monthdayparse(items):
     if items[0] in dates:
         for i in months_short:
@@ -103,106 +112,6 @@ def monthdayparse(items):
         return target_date
     except:
         return None
-
-
-class SpecialCommand(Enum):
-    none    = 0  # none
-    help    = 1  # help menu requested
-    not_rec = 2  # request not recognized
-    legal   = 3  # legal stuff
-
-
-class Command:
-    location    = None
-    target_date = None
-    special_req = SpecialCommand.none
-
-    def __init__(self, request):
-        items = request.split(' ')
-        if "help" in items:
-            self.special_req = SpecialCommand.help
-        elif "legal" in items:
-            self.special_req = SpecialCommand.legal
-
-        elif len(items) == 0:
-            self.location = "ubc"
-            self.target_date = "current"
-
-        elif len(items) == 1:
-            found = False
-            for i in special_dates:
-                if i in items:
-                    self.target_date = i
-                    self.location = "ubc"
-                    found = True
-                    break
-            if not found:
-                for i in location_short:
-                    if i in items:
-                        self.location = location_short[i]
-                        self.target_date = "current"
-                        found = True
-                        break
-            if not found:
-                self.special_req = SpecialCommand.not_rec
-
-        elif len(items) == 2:
-            found_date = False
-            found_loc = False
-            for i in special_dates:
-                if i in items:
-                    self.target_date = i
-                    found_date = True
-                    break
-
-            for i in location_short:
-                if i in items:
-                    self.location = location_short[i]
-                    found_loc = True
-                    break
-
-            if not found_date and not found_loc:
-                response = monthdayparse(items)
-                if response is not None:
-                    self.location    = "ubc"
-                    self.target_date = response
-                else:
-                    self.special_req = SpecialCommand.not_rec
-
-            if found_loc and not found_date:
-                self.special_req = SpecialCommand.not_rec
-
-        elif len(items) == 3:
-            locloc = -1
-            for i in location_short:
-                for j in range(len(items)):
-                    if i == items[j]:
-                        locloc = j
-                        self.location = location_short[items[j]]
-                        break
-            if locloc == -1:
-                self.special_req = SpecialCommand.not_rec
-            else:
-                tempitems = []
-                for i in range(len(items)):
-                    if i != locloc:
-                        tempitems.append(items[i])
-                response = monthdayparse(tempitems)
-                if response is not None:
-                    self.target_date = response
-                    self.location    = "ubc"
-                else:
-                    self.special_req = SpecialCommand.not_rec
-
-        else:
-            self.special_req = SpecialCommand.not_rec
-
-    def render(self):
-        string  = "Command:\n"
-        string += "Special command: " + str(Command.special_req).split(".")[1]
-        string += "Location: " + str(Command.location) + "\n"
-        string += "Time: " + str(Command.target_date)
-        return string
 
 
 def handle_command(command, channel):

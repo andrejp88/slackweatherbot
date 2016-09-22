@@ -1,6 +1,8 @@
 import pyowm
 import xml.etree.ElementTree as et
 import os.path
+import datetime
+from common import *
 
 
 def get_token():
@@ -11,19 +13,31 @@ def get_token():
         if child.tag == "owm-token":
             OWM_TOKEN = child.text
 
+
 get_token()
 owm_client = pyowm.OWM(str(OWM_TOKEN))
 # cache      = pyowm.caches.lrucache.LRUCache()
 
 
+def get_obs(date, coords):
+    try:
+        observation = owm_client.weather_at_coords(coords[0], coords[1])
+        weather = observation.get_weather()
+        return weather
+    except:
+        return None
+
+
+def get_3hr(date, coords):
+    try:
+        forecast = owm_client.three_hours_forecast_at_coords(coords[0], coords[1])
+    except:
+        return None
+
+
 def get_weather(date, coords):
     if date == "now":
-        try:
-            observation = owm_client.weather_at_coords(coords[0], coords[1])
-            weather = observation.get_weather()
-            return weather
-        except:
-            return None
+        return get_obs(date, coords)
     elif date in ("today", "tonight"):
         try:
             pass
@@ -41,6 +55,14 @@ def get_weather(date, coords):
             return None
 
 
+def format_time(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%b %d at %H:%M:%S')
+
+
+def format_time_short(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%H:%M')
+
+
 def format_weather(weather, date):
     pass
 
@@ -51,7 +73,7 @@ def format_weather_now(weather):
     string += "The cloud coverage is: " + str(weather.get_clouds()) + "%.\n"
     string += "The humidity is: " + str(weather.get_humidity()) + "%\n"
     string += "The wind speed is: " + str(weather.get_wind()['speed']) + " kph\n"
-    string += "Weather last updated: " + weather.get_reference_time(timeformat='iso') + "."
+    string += "Weather last updated: " + format_time(weather.get_reference_time()) + "."
     return string
 
 
@@ -59,8 +81,8 @@ def format_weather_today(weather):
     string  = format_weather_now(weather)
     string += "\n\n"
     string += format_weather_tonight(weather)
-    string += "\n\nSunrise: " + str(weather.get_sunrise_time('iso'))
-    string += "\nSunset: " + str(weather.get_sunset_time('iso'))
+    string += "\n\nSunrise: " + format_time_short(weather.get_sunrise_time())
+    string += "\nSunset: " + format_time_short(weather.get_sunset_time())
 
 
 def format_weather_tonight(weather):
