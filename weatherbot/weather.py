@@ -4,6 +4,8 @@ import os.path
 import datetime
 from common import *
 
+fail_message = "I'm sorry, I couldn't get the weather."
+
 
 def get_token():
     global OWM_TOKEN
@@ -19,7 +21,7 @@ owm_client = pyowm.OWM(str(OWM_TOKEN))
 # cache      = pyowm.caches.lrucache.LRUCache()
 
 
-def get_obs(date, coords):
+def get_obs(coords):
     try:
         observation = owm_client.weather_at_coords(coords[0], coords[1])
         weather = observation.get_weather()
@@ -28,31 +30,29 @@ def get_obs(date, coords):
         return None
 
 
-def get_3hr(date, coords):
+def get_3hr(coords):
     try:
         forecast = owm_client.three_hours_forecast_at_coords(coords[0], coords[1])
     except:
         return None
 
 
-def get_weather(date, coords):
-    if date == "now":
-        return get_obs(date, coords)
-    elif date in ("today", "tonight"):
-        try:
-            pass
-        except:
-            return None
-    elif date == "tomorrow":
-        try:
-            pass
-        except:
-            return None
+def get_daily(coords):
+    pass
+
+
+def get_weather(command):
+    if command.date_request == Date_Request.observation:
+        weather = get_obs(location_ref[command.location])
+        return format_weather_obs(weather)
+    elif command.date_request == Date_Request.too_far:
+        return "I'm sorry, but that date is too far away."
+    elif command.date_request == Date_Request.hourly:
+        weather = get_3hr(coords)
+        return ""
     else:
-        try:
-            pass
-        except:
-            return None
+        weather = get_daily(coords)
+        return ""
 
 
 def format_time(timestamp):
@@ -67,7 +67,7 @@ def format_weather(weather, date):
     pass
 
 
-def format_weather_now(weather):
+def format_weather_obs(weather):
     string  = "Currently: \n"
     string += str(weather.get_temperature('celsius')['temp']) + "ºC.\n"
     string += "The cloud coverage is: " + str(weather.get_clouds()) + "%.\n"

@@ -36,27 +36,6 @@ OWM_TOKEN, SLACK_TOKEN, BOT_ID, debug = get_config()
 AT_BOT    = "<@" + BOT_ID + ">"
 client = sc.SlackClient(SLACK_TOKEN)
 
-
-
-READ_WEBSOCKET_DELAY = 1
-
-months_short   = {"jan" : "january", "feb" : "february", "mar" : "march", "apr" : "april",
-                  "may" : "may", "jun" : "june", "jul" : "july", "aug" : "august",
-                  "sep" : "september", "oct" : "october", "nov" : "november", "dec" : "december"}
-special_dates  = ["now", "tomorrow", "tonight", "today"]
-months_ord     = {"jan" : 1, "feb" : 2, "mar" : 3, "apr" : 4,
-                  "may" : 5, "jun" : 6, "jul" : 7, "aug" : 8,
-                  "sep" : 9, "oct" : 10, "nov" : 11, "dec" : 12}
-dates          = [str(i) for i in range(1, 32)]
-days_per_month = {"jan" : 31, "feb" : 29, "mar" : 31, "apr" : 30,
-                  "may" : 31, "jun" : 30, "jul" : 31, "aug" : 31,
-                  "sep" : 30, "oct" : 31, "nov" : 30, "dec" : 31}
-
-locations      = ["ubc", "porteau", "macmillan"]
-location_ref   = {"ubc" : "49.2653645,-123.2520194", "porteau" : "49.5571242,-123.2384998",
-                  "macmillan" : "49.2763368,-123.1450727"}
-location_short = {"ubc" : "ubc", "porteau" : "porteau", "macmillan" : "macmillan", "van" : "ubc", "vancouver" : "ubc"}
-
 help_text = """
 Hello! I'm weatherbot.
 
@@ -84,53 +63,21 @@ Both are used through Python through the pyowm and slackclient PyPI packages, re
 This project is licenced under the MIT licence, as are both those packages. Contact Mia Kramer for more information."""
 
 
-def check_dates(date):
-    if date in special_dates:
-        return date
-
-
-def monthdayparse(items):
-    if items[0] in dates:
-        for i in months_short:
-            if i in items[1]:
-                if eval(items[0]) <= days_per_month[items[1][0:3]]:
-                    target_date = months_short[items[1][0:3]] + " " + items[0]
-                    break
-                else:
-                    return None
-    elif items[1] in dates:
-        for i in months_short:
-            if i in items[0]:
-                if eval(items[1]) <= days_per_month[items[0][0:3]]:
-                    target_date = months_short[items[0][0:3]] + " " + items[1]
-                    break
-                else:
-                    return None
-    else:
-        return None
-    try:
-        return target_date
-    except:
-        return None
-
-
 def handle_command(command, channel):
         if command.special_req != SpecialCommand.none:
             if command.special_req == SpecialCommand.help:
                 response = help_text
             elif command.special_req == SpecialCommand.legal:
                 response = legal_text
+            elif command.special_req == SpecialCommand.ping:
+                response = "Pong"
             else:
                 response = "I'm sorry, I didn't understand that. Try again or type: `@weatherbot help`."
         else:
             client.api_call("chat.postMessage", channel=channel, text="I'm looking up the weather for: " + \
                                                                       command.target_date.capitalize() + ", at: " +\
                                                                       command.location.capitalize() + ".", as_user=True)
-            weather = get_weather(command.target_date, get_coords(command.location))
-            if weather is not None:
-                response = format_weather(weather, command.target_date)
-            else:
-                response = "I'm sorry, I couldn't get the weather."
+            response = get_weather(command)
         client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
@@ -154,13 +101,13 @@ if __name__ == "__main__":
         print("Double check the bot token?")
         time.sleep(30)
     debug and print("Weather bot is running.")
-    client.api_call('chat.postMessage', channel='#testing_weatherbot', text='@miak Bot started.', as_user=True)
+    # client.api_call('chat.postMessage', channel='#testing_weatherbot', text='@miak Bot started.', as_user=True)
     while True:
         command, channel = parse_slack_output(client.rtm_read())
         if command and channel:
             debug and print("Received command...")
             command = Command(command)
             debug and print("Command:")
-            debug and print(Command.render())
+            # debug and print(Command.render())
             handle_command(command, channel)
         time.sleep(READ_WEBSOCKET_DELAY)
