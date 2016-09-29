@@ -3,12 +3,12 @@ import time
 from weather import *  # PyCharm highlights this as wrong, but it's fine. The methods defined here also work.
 from common import *
 import xml.etree.ElementTree as et
-import os.path
+import os
 import datetime
 
 
 def get_config():
-    tree = et.parse(os.path.dirname(__file__) + '/../config.xml')
+    tree = et.parse(os.getcwd() + '/../config.xml')
     root = tree.getroot()
 
     OWM_TOKEN   = None
@@ -52,7 +52,7 @@ Here are a couple of examples:
 `porteau` - the current weather at Porteau Cove.
 
 You can either use one of the special dates (`now`, `tonight`, `tomorrow`, and `today`) or a month and a date.
-The currently supported locations are: ubc, porteau, macmillan.
+The currently supported locations are: ubc, porteau, macmillan, kobau, meritt, boundary, mitchell.
 The terms you enter can be in any order. Do note: every term must be one word. Use "Porteau", not "Porteau Cove".
 
 Let Mia know if there's anything I can do to be more useful! (as long as it won't take too long to code...)
@@ -95,19 +95,21 @@ def get_coords(loc):
     return eval(location_ref[loc])
 
 
-if __name__ == "__main__":
+def main():
     while not client.rtm_connect():
-        print("Weather bot is not running. Will try again in 30 seconds.")
-        print("Double check the bot token?")
+        print("Weatherbot is not running. Will try again in 30 seconds.")
+        print("Double check the bot token.")
         time.sleep(30)
-    debug and print("Weather bot is running.")
+    debug and print("Weatherbot is running.")
     # client.api_call('chat.postMessage', channel='#testing_weatherbot', text='@miak Bot started.', as_user=True)
     while True:
         command, channel = parse_slack_output(client.rtm_read())
         if command and channel:
             debug and print("Received command...")
             command = Command(command)
-            debug and print("Command:")
-            # debug and print(Command.render())
             handle_command(command, channel)
         time.sleep(READ_WEBSOCKET_DELAY)
+
+
+if __name__ == "__main__":
+    main()

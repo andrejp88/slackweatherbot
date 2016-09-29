@@ -9,7 +9,7 @@ file = open('config.xml', 'w')
 file.write("""<?xml version="1.0" encoding="UTF-8" ?>\n""")
 file.write("""<config>\n""")
 
-owm_token = input("Please enter the OWM token:")
+owm_token = input("Please enter the OWM token: ")
 print("Trying the owm token...")
 try:
     print("Opening the OWM client...")
@@ -24,11 +24,11 @@ except:
     exit(1)
 
 print("OWM connection successful.")
-file.write("""\t<owm-token>""" + owm_token + """"</owm-token>\n""")
+file.write("""\t<owm-token>""" + owm_token + """</owm-token>\n""")
 
-botname = input("\n\nPlease enter the bot's name:")
+botname = input("\n\nPlease enter the bot's name: ")
 
-slack_token = input("Please enter the slack token:")
+slack_token = input("Please enter the slack token: ")
 print("Trying the slack token...")
 bot_id = None
 try:
@@ -45,7 +45,7 @@ print("Success.\n\n")
 file.write("""\t<slack-token>""" + slack_token + """</slack-token>\n""")
 file.write("""\t<slack-id>""" + bot_id + """</slack-id>\n""")
 
-debug = eval(input("Would you like to use debug mode? Enter True or False.").capitalize())
+debug = eval(input("Would you like to use debug mode? Enter True or False. ").capitalize())
 while type(debug).__name__ != 'bool':
     print("Response not recognized. Enter True or False.")
     debug = eval(input().capitalize())
