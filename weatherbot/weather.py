@@ -7,12 +7,12 @@ fail_message = "I'm sorry, I couldn't get the weather."
 
 
 def get_obs(coords):
-    try:
-        observation = owm_client.weather_at_coords(coords[0], coords[1])
-        weather = observation.get_weather()
-        return weather
-    except:
-        return None
+    #try:
+    observation = owm_client.weather_at_coords(coords[0], coords[1])
+    weather = observation.get_weather()
+    return weather
+    #except:
+    #    return None
 
 
 def get_3hr(coords):
@@ -32,9 +32,10 @@ def get_daily(coords):
 
 
 def get_weather(command):
-    coords = eval(location_ref[command.location])
+    loc = location_ref[command.location]
+    print(type(loc))
     if command.date_request == Date_Request.observation:
-        weather = get_obs(coords)
+        weather = get_obs(loc)
         if weather is not None:
             return format_weather_obs(weather)
         else:
@@ -42,13 +43,13 @@ def get_weather(command):
     elif command.date_request == Date_Request.too_far:
         return "I'm sorry, but that date is too far away."
     elif command.date_request == Date_Request.hourly:
-        weather = get_3hr(coords)
+        weather = get_3hr(loc)
         if weather is not None:
             return format_weather_3hr(weather.get_weathers(), command.target_date)
         else:
             return fail_message
     else:
-        weather = get_daily(coords)
+        weather = get_daily(loc)
         if weather is not None:
             return format_weather_daily(weather, command.target_date)
         else:

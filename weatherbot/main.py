@@ -91,9 +91,6 @@ def parse_slack_output(slack_rtm_output):
     return None, None
 
 
-def get_coords(loc):
-    return eval(location_ref[loc])
-
 
 def main():
     while not client.rtm_connect():

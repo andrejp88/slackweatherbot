@@ -3,6 +3,7 @@ import datetime
 import pyowm
 import xml.etree.ElementTree as et
 import os.path
+from locations import *
 
 
 ### CONSTANTS
@@ -20,32 +21,18 @@ months_ord     = {"jan" : 1, "feb" : 2, "mar" : 3, "apr" : 4,
                   "may" : 5, "jun" : 6, "jul" : 7, "aug" : 8,
                   "sep" : 9, "oct" : 10, "nov" : 11, "dec" : 12}
 
-locations      = ["ubc", "porteau", "macmillan", "kobau", "merritt", "mitchell", "boundary"]
-location_ref   = {"ubc" : "49.2653645,-123.2520194",
-                  "porteau" : "49.5571242,-123.2384998",
-                  "macmillan" : "49.2763368,-123.1450727",
-                  "merritt": "49.9308074,-120.6356903",
-                  "kobau": "49.1865648,-119.569987",
-                  "mitchell": "44.5701282,-120.1627358",
-                  "boundary": "49.0039561,-123.0423283"}
-location_short = {"ubc" : "ubc", "porteau" : "porteau", "macmillan" : "macmillan", "van" : "ubc", "vancouver" : "ubc",
-                  "kobau": "kobau", "merritt" : "merritt", "meritt" : "merritt", "mitchell" : "mitchell",
-                  "oliver" : "kobau", "aspen": "merritt", "boundary" : "boundary", "merit" : "merritt"}
-
 
 ### OWM
 def get_token():
-    global OWM_TOKEN
     tree = et.parse(os.path.dirname(__file__) + '/../config.xml')
     root = tree.getroot()
     for child in root:
         if child.tag == "owm-token":
-            OWM_TOKEN = child.text
+            return child.text
 
 
-get_token()
+OWM_TOKEN = get_token()
 owm_client = pyowm.OWM(str(OWM_TOKEN))
-
 
 class Date_Request(Enum):
     observation = 0
@@ -107,12 +94,12 @@ def monthdayparse(items):
 
 
 class SpecialCommand(Enum):
-    none = 0  # none
-    help = 1  # help menu requested
+    none    = 0  # none
+    help    = 1  # help menu requested
     not_rec = 2  # request not recognized
-    legal = 3  # legal stuff
-    ping = 4  # for checking if the bot is running
-    chart = 5  # cleardarksky chart
+    legal   = 3  # legal stuff
+    ping    = 4  # for checking if the bot is running
+    chart   = 5  # cleardarksky chart
 
 
 class Command:
