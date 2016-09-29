@@ -7,13 +7,12 @@ fail_message = "I'm sorry, I couldn't get the weather."
 
 
 def get_obs(coords):
-    # try:
-    observation = owm_client.weather_at_coords(coords[0], coords[1])
-    weather = observation.get_weather()
-    return weather
-    # except:
-    #     print("here")
-    #     return None
+    try:
+        observation = owm_client.weather_at_coords(coords[0], coords[1])
+        weather = observation.get_weather()
+        return weather
+    except:
+        return None
 
 
 def get_3hr(coords):
