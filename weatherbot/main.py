@@ -66,36 +66,39 @@ This project is licenced under the MIT licence, as are both those packages. Cont
 
 
 def handle_command(command, channel):
-        if command.special_req != SpecialCommand.none:
-            if command.special_req == SpecialCommand.help:
-                response = help_text
-            elif command.special_req == SpecialCommand.legal:
-                response = legal_text
-            elif command.special_req == SpecialCommand.ping:
-                response = "Pong"
-            elif command.special_req == SpecialCommand.chart:
-                if command.location is not None:
-                    client.api_call("chat.postMessage", channel=channel, text="I'm looking up the chart for: " + \
-                                                                      command.location.capitalize() + ".", as_user=True)
-                    charturl = fetch_image_url(command.location)
-                    if charturl is not None:
-                        client.api_call("chat.postMessage", channel=channel, attachments='[{"image_url":"' +
-                                                                                         charturl + '", "title":"chart"}]',
-                                        text="", as_user=True)
-                        response = None
-                    else:
-                        response = "I'm sorry, I couldn't get that chart."
+    if command.special_req != SpecialCommand.none:
+        if command.special_req == SpecialCommand.help:
+            response = help_text
+        elif command.special_req == SpecialCommand.aurora:
+            client.api_call("chat.postMessage", channel=channel, text="Retrieving 3 day aurora forecast...", as_user=True)
+            response = check_aurora_forecast()
+        elif command.special_req == SpecialCommand.legal:
+            response = legal_text
+        elif command.special_req == SpecialCommand.ping:
+            response = "Pong"
+        elif command.special_req == SpecialCommand.chart:
+            if command.location is not None:
+                client.api_call("chat.postMessage", channel=channel, text="I'm looking up the chart for: " + \
+                                                                          command.location.capitalize() + ".", as_user=True)
+                charturl = fetch_image_url(command.location)
+                if charturl is not None:
+                    client.api_call("chat.postMessage", channel=channel, attachments='[{"image_url":"' +
+                                                                                     charturl + '", "title":"chart"}]',
+                                    text="", as_user=True)
+                    response = None
                 else:
-                    response = "I need a place I recognize to give you a chart."
+                    response = "I'm sorry, I couldn't get that chart."
             else:
-                response = "I'm sorry, I didn't understand that. Try again or type: `@weatherbot help`."
+                response = "I need a place I recognize to give you a chart."
         else:
-            client.api_call("chat.postMessage", channel=channel, text="I'm looking up the weather for: " + \
-                                                                      command.target_date.capitalize() + ", at: " +\
-                                                                      command.location.capitalize() + ".", as_user=True)
-            response = get_weather(command)
-        if response is not None:
-            client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
+            response = "I'm sorry, I didn't understand that. Try again or type: `@weatherbot help`."
+    else:
+        client.api_call("chat.postMessage", channel=channel, text="I'm looking up the weather for: " + \
+                                                                  command.target_date.capitalize() + ", at: " + \
+                                                                  command.location.capitalize() + ".", as_user=True)
+        response = get_weather(command)
+    if response is not None:
+        client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):

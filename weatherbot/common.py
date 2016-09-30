@@ -100,6 +100,7 @@ class SpecialCommand(Enum):
     legal   = 3  # legal stuff
     ping    = 4  # for checking if the bot is running
     chart   = 5  # cleardarksky chart
+    aurora  = 6  # aurora forecast
 
 
 class Command:
@@ -136,6 +137,10 @@ class Command:
                         self.target_date = "now"
                         found = True
                         break
+            if not found:
+                if "aurora" in items:
+                    self.special_req = SpecialCommand.aurora
+                    found = True
             if not found:
                 self.special_req = SpecialCommand.not_rec
 
