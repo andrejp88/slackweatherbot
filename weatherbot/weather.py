@@ -33,7 +33,6 @@ def get_daily(coords):
 
 def get_weather(command):
     loc = location_ref[command.location]
-    print(type(loc))
     if command.date_request == Date_Request.observation:
         weather = get_obs(loc)
         if weather is not None:
@@ -70,6 +69,7 @@ def format_weather_obs(weather):
     string += "The cloud coverage is: " + str(weather.get_clouds()) + "%.\n"
     string += "The humidity is: " + str(weather.get_humidity()) + "%\n"
     string += "The wind speed is: " + str(weather.get_wind()['speed']) + " kph\n"
+    string += "_Last updated at " + format_time(weather.get_reference_time()) + "_"
     return string
 
 
