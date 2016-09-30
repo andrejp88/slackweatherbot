@@ -81,6 +81,10 @@ def handle_command(command, channel):
                                                                                          charturl + '", "title":"chart"}]',
                                         text="", as_user=True)
                         response = None
+                    else:
+                        response = "I'm sorry, I couldn't get that chart."
+                else:
+                    response = "I need a place I recognize to give you a chart."
             else:
                 response = "I'm sorry, I didn't understand that. Try again or type: `@weatherbot help`."
         else:

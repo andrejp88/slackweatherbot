@@ -142,13 +142,13 @@ class Command:
         elif len(items) == 2:
             found_date = False
             found_loc = False
-            for i in special_dates + ["chart"]:
-                if i in items:
-                    if i == "chart":
-                        self.special_req = SpecialCommand.chart
-                        found_date = True
-                        break
-                    else:
+            if "chart" in items:
+                self.special_req = SpecialCommand.chart
+                found_date = True
+
+            if not(found_date):
+                for i in special_dates:
+                    if i in items:
                         self.target_date = i
                         found_date = True
                         break
