@@ -5,6 +5,8 @@ from common import *
 import xml.etree.ElementTree as et
 import os
 from chart import *
+import datetime
+from aurora import *
 
 
 def get_config():
@@ -113,13 +115,22 @@ def main():
         print("Double check the bot token.")
         time.sleep(30)
     debug and print("Weatherbot is running.")
-    # client.api_call('chat.postMessage', channel='#testing_weatherbot', text='@miak Bot started.', as_user=True)
+    client.api_call('chat.postMessage', channel='#testing_weatherbot', text='Weatherbot start successful.', as_user=True)
+    target_time = datetime.datetime.today()
+
     while True:
         command, channel = parse_slack_output(client.rtm_read())
         if command and channel:
             debug and print("Received command...")
             command = Command(command)
             handle_command(command, channel)
+        if time.localtime().tm_min == target_time.minute:
+            resp = check_aurora()
+            if resp is not None:
+                response = "AURORA ALERT: According to the NOAA Aurora Forecast, there is an increased possibility of"
+                response += " seeing the Northern Lights in the next half hour.\nThe probability is: {}% in the {} area.".format(resp.prob, resp.area)
+                client.api_call('chat.postMessage', channel='#announcements', text=response, as_user=True)
+            target_time = datetime.datetime.today() + datetime.timedelta(minutes=30)
         time.sleep(READ_WEBSOCKET_DELAY)
 
 

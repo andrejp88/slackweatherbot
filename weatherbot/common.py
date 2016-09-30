@@ -203,3 +203,11 @@ class Command:
         string += "Location: " + str(Command.location) + "\n"
         string += "Time: " + str(Command.target_date)
         return string
+
+
+class AuroraReport:
+    area = None
+    prob = None
+    def __init__(self, area, prob):
+        self.area = area
+        self.prob = prob
