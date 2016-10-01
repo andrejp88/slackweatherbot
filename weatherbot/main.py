@@ -1,7 +1,7 @@
 import slackclient as sc
 import time
-from weather import *  # PyCharm highlights this as wrong, but it's fine. The methods defined here also work.
-from common import *
+from weatherbot.weather import *  # PyCharm highlights this as wrong, but it's fine. The methods defined here also work.
+from weatherbot.common import *
 import xml.etree.ElementTree as et
 import os
 from chart import *
@@ -66,17 +66,17 @@ This project is licenced under the MIT licence, as are both those packages. Cont
 
 
 def handle_command(command, channel):
-    if command.special_req != SpecialCommand.none:
-        if command.special_req == SpecialCommand.help:
+    if command.special_req != CommandType.regular:
+        if command.special_req == CommandType.help:
             response = help_text
-        elif command.special_req == SpecialCommand.aurora:
+        elif command.special_req == CommandType.aurora:
             client.api_call("chat.postMessage", channel=channel, text="Retrieving 3 day aurora forecast...", as_user=True)
             response = check_aurora_forecast()
-        elif command.special_req == SpecialCommand.legal:
+        elif command.special_req == CommandType.legal:
             response = legal_text
-        elif command.special_req == SpecialCommand.ping:
+        elif command.special_req == CommandType.ping:
             response = "Pong"
-        elif command.special_req == SpecialCommand.chart:
+        elif command.special_req == CommandType.chart:
             if command.location is not None:
                 client.api_call("chat.postMessage", channel=channel, text="I'm looking up the chart for: " + \
                                                                           command.location.capitalize() + ".", as_user=True)

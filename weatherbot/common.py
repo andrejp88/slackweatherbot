@@ -3,7 +3,8 @@ import datetime
 import pyowm
 import xml.etree.ElementTree as et
 import os.path
-from locations import *
+from weatherbot.locations import *
+import re
 
 
 ### CONSTANTS
@@ -20,6 +21,23 @@ days_per_month = {"jan" : 31, "feb" : 29, "mar" : 31, "apr" : 30,
 months_ord     = {"jan" : 1, "feb" : 2, "mar" : 3, "apr" : 4,
                   "may" : 5, "jun" : 6, "jul" : 7, "aug" : 8,
                   "sep" : 9, "oct" : 10, "nov" : 11, "dec" : 12}
+
+# The minimum number of letters required to be sure of what month is being discussed,
+# and the regex pattern corresponding to the valid days in that month.
+pattern31days = "0*([1-9]|(1|2)[0-9]|3(0|1))"
+pattern30days = "0*([1-9]|(1|2)[0-9]|30)"
+months_disambig_with_days = {"ja" : pattern31days,
+                             "f"  : "0*([1-9]|1[0-9]|2[0-8])",
+                             "mar": pattern31days,
+                             "ap" : pattern30days,
+                             "may": pattern31days,
+                             "jun": pattern30days,
+                             "jul": pattern31days,
+                             "au" : pattern31days,
+                             "s"  : pattern30days,
+                             "o"  : pattern31days,
+                             "n"  : pattern30days,
+                             "d"  : pattern31days}
 
 
 ### OWM
@@ -93,30 +111,88 @@ def monthdayparse(items):
         return None
 
 
-class SpecialCommand(Enum):
-    none    = 0  # none
-    help    = 1  # help menu requested
-    not_rec = 2  # request not recognized
-    legal   = 3  # legal stuff
-    ping    = 4  # for checking if the bot is running
-    chart   = 5  # cleardarksky chart
-    aurora  = 6  # aurora forecast
+class CommandType(Enum):
+    """
+    The type of command requested.
+    """
+    regular    = 0  # regular command - only a date and/or a location was provided
+    help       = 1  # help menu requested
+    invalid    = 2  # request not recognized
+    legal      = 3  # legal stuff
+    ping       = 4  # for checking if the bot is running
+    chart      = 5  # cleardarksky chart
+    aurora     = 6  # aurora forecast
+
+
+def generate_date_pattern():
+    date_pattern = "("
+
+    # Add the special relative dates
+    for i in special_dates:
+        date_pattern += i + "|"
+
+    date_pattern = date_pattern.strip('|')
+    date_pattern += ")|("
+
+    # "Au", "aug", "August", "AUGUSTUSCAESAR", "aUrIgA" all match August.
+    # Might not be bad for ~internationalijeriodf~ i18n, not that anyone's ever going to use it in any other language.
+    for month, month_length_pattern in months_disambig_with_days.items():
+        date_pattern += month + "[a-z]* " + month_length_pattern + "|"
+
+    date_pattern = date_pattern.strip('|')
+    date_pattern += ")"
+
+    print(date_pattern)
+
+    return re.compile(date_pattern)
 
 
 class Command:
-    location = None
-    target_date = None
-    special_req = SpecialCommand.none
-    date_request = None
+    location = None             # the location the user is requesting weather for
+    target_date = None          # the date the user is requesting weather for
+    type = CommandType.regular  # the type of command - certain commands need to be processed differently
+    date_request = None         # no idea
+
+    date_regex = generate_date_pattern()
 
     def __init__(self, request):
+        """
+        Constructs a `Command` object
+
+        :param request: string
+        """
+
+        # Andrej's code:
+        request = request.lower()
+        if request == "help":
+            self.type = CommandType.help
+        elif request == "legal":
+            self.type = CommandType.legal
+        elif request == "ping":
+            self.type = CommandType.ping
+        elif request == "aurora":
+            self.type = CommandType.aurora
+        elif len(request) == 0:
+            # If no arguments are given, just return the current weather at UBC
+            self.type = CommandType.regular
+            self.location = "ubc"
+            self.target_date = "now"
+        else:
+            # todo: check whether the command fits the regex for "chart date location" in any order
+
+            if True:
+                self.type = CommandType.regular
+            else:
+                self.type = CommandType.invalid
+
+        # Mia's code:
         items = request.split(' ')
         if "help" in items:
-            self.special_req = SpecialCommand.help
+            self.type = CommandType.help
         elif "legal" in items:
-            self.special_req = SpecialCommand.legal
+            self.type = CommandType.legal
         elif "ping" in items:
-            self.special_req = SpecialCommand.ping
+            self.type = CommandType.ping
 
         elif len(items) == 0:
             self.location = "ubc"
@@ -139,16 +215,16 @@ class Command:
                         break
             if not found:
                 if "aurora" in items:
-                    self.special_req = SpecialCommand.aurora
+                    self.type = CommandType.aurora
                     found = True
             if not found:
-                self.special_req = SpecialCommand.not_rec
+                self.type = CommandType.invalid
 
         elif len(items) == 2:
             found_date = False
             found_loc = False
             if "chart" in items:
-                self.special_req = SpecialCommand.chart
+                self.type = CommandType.chart
                 found_date = True
 
             if not(found_date):
@@ -170,10 +246,10 @@ class Command:
                     self.location = "ubc"
                     self.target_date = response
                 else:
-                    self.special_req = SpecialCommand.not_rec
+                    self.type = CommandType.invalid
 
             if found_loc and not found_date:
-                self.special_req = SpecialCommand.not_rec
+                self.type = CommandType.invalid
 
         elif len(items) == 3:
             locloc = -1
@@ -184,7 +260,7 @@ class Command:
                         self.location = location_short[items[j]]
                         break
             if locloc == -1:
-                self.special_req = SpecialCommand.not_rec
+                self.type = CommandType.invalid
             else:
                 tempitems = []
                 for i in range(len(items)):
@@ -194,17 +270,17 @@ class Command:
                 if response is not None:
                     self.target_date = response
                 else:
-                    self.special_req = SpecialCommand.not_rec
+                    self.type = CommandType.invalid
 
         else:
-            self.special_req = SpecialCommand.not_rec
+            self.type = CommandType.invalid
 
-        if self.special_req == SpecialCommand.none:
+        if self.type == CommandType.regular:
             self.date_request = _check_date(self.target_date)
 
     def render(self):
         string = "Command:\n"
-        string += "Special command: " + str(Command.special_req).split(".")[1]
+        string += "Special command: " + str(Command.type).split(".")[1]
         string += "Location: " + str(Command.location) + "\n"
         string += "Time: " + str(Command.target_date)
         return string
