@@ -83,11 +83,7 @@ def format_weather_3hr(weather, target_date):
         using_weathers = [i for i in weather if current_date <= datetime.datetime.fromtimestamp(i.get_reference_time()) <= end_date]
 
         for w in using_weathers:
-            string += "At " + format_time_short(w.get_reference_time()) + ":\n"
-            string += str(w.get_temperature('celsius')['temp']) + "ºC; "
-            string += str(w.get_clouds()) + "% clouds; "
-            string += str(w.get_humidity()) + "% humidity; "
-            string += str(w.get_wind()['speed']) + " kph wind.\n\n"
+            string += format_single_weather(w, True) + "\n"
 
     elif target_date == "tomorrow":
         current_date = datetime.datetime.today()
@@ -99,11 +95,7 @@ def format_weather_3hr(weather, target_date):
                           start_date <= datetime.datetime.fromtimestamp(i.get_reference_time()) <= end_date]
 
         for w in using_weathers:
-            string += "At " + format_time_short(w.get_reference_time()) + ":\n"
-            string += str(w.get_temperature('celsius')['temp']) + "ºC; "
-            string += str(w.get_clouds()) + "% clouds; "
-            string += str(w.get_humidity()) + "% humidity; "
-            string += str(w.get_wind()['speed']) + " kph wind.\n\n"
+            string += format_single_weather(w, True) + "\n"
 
     else:
         current_date = datetime.datetime.today()
@@ -121,11 +113,7 @@ def format_weather_3hr(weather, target_date):
                           start_date <= datetime.datetime.fromtimestamp(i.get_reference_time()) <= end_date]
 
         for w in using_weathers:
-            string += "At " + format_time_short(w.get_reference_time()) + ":\n"
-            string += str(w.get_temperature('celsius')['temp']) + "ºC; "
-            string += str(w.get_clouds()) + "% clouds; "
-            string += str(w.get_humidity()) + "% humidity; "
-            string += str(w.get_wind()['speed']) + " kph wind.\n\n"
+            string += format_single_weather(w, True) + "\n"
 
 
     return string
@@ -133,4 +121,27 @@ def format_weather_3hr(weather, target_date):
 
 def format_weather_daily(weather, target_date):
     string  = "Long-term forecasts have not yet been implemented. For astronomy they're probably useless, but Mia will get around to it soonish."
+    return string
+
+
+def format_single_weather(weather, inline=False):
+    """
+    Formats a *Weather* object as a string.
+    :param weather: the *Forecast* object to format
+    :param date: the date the forecast is requested requested
+    :param inline: if true, weather report will only be two lines long
+    :return: the formatted string
+    """
+
+    eol_char = "\n"
+    if inline:
+        eol_char = "        "
+
+    string = ""
+    string += "At " + format_time_short(weather.get_reference_time()) + ":\n"
+    string += "Temperature: " + str(weather.get_temperature('celsius')['temp']) + "ºC" + eol_char
+    string += "Cloud cover: " + str(weather.get_clouds()) + "%" + eol_char
+    string += "Humidity: " + str(weather.get_humidity()) + "%" + eol_char
+    string += "Wind speed: " + str(weather.get_wind()['speed']) + "kph\n"
+
     return string
